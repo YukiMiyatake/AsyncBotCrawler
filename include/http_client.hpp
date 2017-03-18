@@ -81,7 +81,7 @@ public:
 		const std::string& server, const std::string& uri, const std::string& port = "https")
 		: io_service_(io_service), resolver_(io_service), socket_(io_service, context), server_(server), uri_(uri), port_(port), deadline_timer_(io_service) {
 
-		shutdown_socket_ = [this]() { socket_.shutdown(); }
+		shutdown_socket_ = [this]() { socket_.shutdown(); };
 	}
 
 
