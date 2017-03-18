@@ -158,11 +158,13 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\asioUtil.cpp" />
+    <ClCompile Include="..\src\https_client.cpp" />
+    <ClCompile Include="..\src\http_client.cpp" />
     <ClCompile Include="..\src\main.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\include\asioUtil.hpp" />
-    <ClInclude Include="..\include\http_client.hpp" />
+    <ClInclude Include="..\include\httpx_client.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
