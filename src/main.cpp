@@ -1,17 +1,14 @@
 
-#include "stdafx.h"
-
 #include<iostream>
 #include<boost/function.hpp>
 
 #include <boost/asio.hpp>
-//#include <boost/asio/ssl.hpp>
+#include <boost/asio/ssl.hpp>
 
 
 
 using namespace std;
 using boost::asio::ip::tcp;
-
 
 
 
