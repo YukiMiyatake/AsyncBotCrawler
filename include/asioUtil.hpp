@@ -3,9 +3,6 @@
 #include <boost/asio.hpp>
 #include<chrono>
 
-#include <boost/bind.hpp>
-#include <boost/asio.hpp>
-#include <boost/asio/ssl.hpp>
 #include <functional>
 
 namespace asioUtil {

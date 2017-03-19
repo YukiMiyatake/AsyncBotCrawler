@@ -41,9 +41,9 @@ int main(int argc, char* argv[])
 
 		// set request_header
 		std::string header = "GET " + std::string("/") + " HTTP/1.0\r\n" + "Host: " + "www.google.co.jp" + "\r\n" + "Accept: */*\r\n" + "Connection: close\r\n\r\n";
-		s->set_header(header);
+		s->set_request(header);
 		
-		s->go(boost::bind(&fuga<METHOD>::hoge, f, _1));
+		s->request(boost::bind(&fuga<METHOD>::hoge, f, _1));
 
 
 		io_service.run();

@@ -1,8 +1,5 @@
 #include "../include/asioUtil.hpp"
 
-//#include <boost/bind.hpp>
-//#include <functional>
-#include<iostream>
 
 namespace asioUtil {
 	void deadlineOperation(boost::asio::deadline_timer &timer,

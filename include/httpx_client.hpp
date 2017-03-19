@@ -64,7 +64,6 @@ private:
 	std::function<void(void)>  shutdown_socket_;
 
 	boost::asio::io_service &io_service_;
-public:
 	unsigned int timeout_ms_ = 1000;
 
 public:
@@ -85,7 +84,7 @@ public:
 	}
 
 
-	void go(HTTPX_CALLBACK callback) {
+	void request(HTTPX_CALLBACK callback) {
 
 		auto  self(shared_from_this());
 
@@ -284,7 +283,7 @@ public:
 
 	httpx::STATE get_status() { return(state_); };
 
-	void set_header(std::string header) {
+	void set_request(std::string header) {
 		request_.consume(request_.size());
 		std::ostream request_stream(&request_);
 		request_stream << header;
