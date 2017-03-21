@@ -25,7 +25,7 @@ void httpx_client<https_socket>::handle_connect(const boost::system::error_code&
 	{
 		state_ = httpx::STATE::CONNECTED;
 
-		asioUtil::deadlineOperation2(deadline_timer_, timeout_ms_
+		asioUtil::deadlineOperation2(deadline_timer_, timeout_ms
 			, [this, self](const boost::system::error_code &ec) {
 			std::cerr << "timeout" << std::endl;
 			shutdown_socket_();
@@ -41,7 +41,7 @@ void httpx_client<https_socket>::handle_connect(const boost::system::error_code&
 				if (!ec)
 				{
 					//*
-					asioUtil::deadlineOperation2(deadline_timer_, timeout_ms_
+					asioUtil::deadlineOperation2(deadline_timer_, timeout_ms
 						, [this, self](const boost::system::error_code &ec) {
 						//			cerr << "timeout" << endl;
 						shutdown_socket_();
@@ -88,7 +88,7 @@ void httpx_client<https_socket>::handle_resolve(const boost::system::error_code&
 			//boost::bind(&httpx_client::verify_certificate, this, _1, _2));
 
 
-		asioUtil::deadlineOperation2(deadline_timer_, timeout_ms_
+		asioUtil::deadlineOperation2(deadline_timer_, timeout_ms
 			, [this, self](const boost::system::error_code &ec) {
 			std::cerr << "timeout" << std::endl;
 			shutdown_socket_();

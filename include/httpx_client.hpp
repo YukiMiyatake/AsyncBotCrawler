@@ -64,7 +64,8 @@ private:
 	std::function<void(void)>  shutdown_socket_;
 
 	boost::asio::io_service &io_service_;
-	unsigned int timeout_ms_ = 1000;
+public:
+	unsigned int timeout_ms = 1000;
 
 public:
 	// HTTP constructor
@@ -93,7 +94,7 @@ public:
 
 		tcp::resolver::query query(server_, port_);
 
-		asioUtil::deadlineOperation2(deadline_timer_, timeout_ms_
+		asioUtil::deadlineOperation2(deadline_timer_, timeout_ms
 		, [this, self](const boost::system::error_code &ec) {
 			std::cerr << "timeout" << std::endl;
 			shutdown_socket_();
@@ -127,7 +128,7 @@ public:
 		{
 			state_ = httpx::STATE::WRITTEN_REQUEST;
 
-			asioUtil::deadlineOperation2(deadline_timer_, timeout_ms_
+			asioUtil::deadlineOperation2(deadline_timer_, timeout_ms
 				, [this, self](const boost::system::error_code &ec) {
 				std::cerr << "timeout" << std::endl;
 				shutdown_socket_();
@@ -172,7 +173,7 @@ public:
 
 			state_ = httpx::STATE::READ_STATUS;
 
-			asioUtil::deadlineOperation2(deadline_timer_, timeout_ms_
+			asioUtil::deadlineOperation2(deadline_timer_, timeout_ms
 				, [this, self](const boost::system::error_code &ec) {
 				std::cerr << "timeout" << std::endl;
 				shutdown_socket_();
@@ -213,7 +214,7 @@ public:
 
 
 
-			asioUtil::deadlineOperation(deadline_timer_, timeout_ms_
+			asioUtil::deadlineOperation(deadline_timer_, timeout_ms
 			
 				, [this,self]() {
 				boost::asio::async_read(socket_, response_,

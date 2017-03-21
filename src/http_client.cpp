@@ -11,7 +11,7 @@ void httpx_client<http_socket>::handle_resolve(const boost::system::error_code& 
 	{
 		state_ = httpx::STATE::RESOLVED;
 
-		asioUtil::deadlineOperation2(deadline_timer_, timeout_ms_
+		asioUtil::deadlineOperation2(deadline_timer_, timeout_ms
 			, [this, self](const boost::system::error_code &ec) {
 			std::cerr << "timeout" << std::endl;
 			shutdown_socket_();
@@ -40,7 +40,7 @@ void httpx_client<http_socket>::handle_connect(const boost::system::error_code& 
 	{
 		state_ = httpx::STATE::CONNECTED;
 
-		asioUtil::deadlineOperation2(deadline_timer_, timeout_ms_
+		asioUtil::deadlineOperation2(deadline_timer_, timeout_ms
 			, [this, self](const boost::system::error_code &ec) {
 			std::cerr << "timeout" << std::endl;
 			shutdown_socket_();
