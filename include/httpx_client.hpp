@@ -44,7 +44,7 @@ private:
 	std::string port_;
 
 	// complete callback
-	HTTPX_CALLBACK callback_;
+	HTTPX_CALLBACK complete_handler_;
 
 
 	boost::asio::deadline_timer deadline_timer_;
@@ -68,28 +68,36 @@ public:
 	unsigned int timeout_ms = 1000;
 
 public:
+	// TODO: RAII
 	// HTTP constructor
+	template<typename Str>
 	httpx_client(boost::asio::io_service& io_service,
-		const std::string& server, const std::string& uri, const std::string& port = "http")
-		: io_service_(io_service), resolver_(io_service), socket_(io_service), server_(server), uri_(uri), port_(port), deadline_timer_(io_service) {
+		Str&& server,  Str&& uri,  Str&& port)
+		: io_service_((io_service))
+		, resolver_(io_service), socket_(io_service)
+		, server_(std::forward<Str>(server))/*, uri_((uri))*/
+		, port_(std::forward<Str>(port)), deadline_timer_(io_service)
+		//, shutdown_socket_( [this]() { socket_.shutdown(boost::asio::socket_base::shutdown_type::shutdown_send); })
+
+	{
 
 		shutdown_socket_ = [this]() { socket_.shutdown(boost::asio::socket_base::shutdown_type::shutdown_send); };
 	}
-
+	/*
 	// HTTPX constructor
 	httpx_client(boost::asio::io_service& io_service, boost::asio::ssl::context& context,
-		const std::string& server, const std::string& uri, const std::string& port = "https")
+		const std::string& server, const std::string& uri, const std::string& port)
 		: io_service_(io_service), resolver_(io_service), socket_(io_service, context), server_(server), uri_(uri), port_(port), deadline_timer_(io_service) {
 
 		shutdown_socket_ = [this]() { socket_.shutdown(); };
 	}
-
+	*/
 
 	void request(HTTPX_CALLBACK callback) {
 
 		auto  self(shared_from_this());
 
-		callback_ = callback;
+		complete_handler_ = callback;
 		state_ = httpx::STATE::INIT;
 
 		tcp::resolver::query query(server_, port_);
@@ -98,7 +106,7 @@ public:
 		, [this, self](const boost::system::error_code &ec) {
 			std::cerr << "timeout" << std::endl;
 			shutdown_socket_();
-		});
+		} );
 
 		resolver_.async_resolve(query
 			, [this, self](const boost::system::error_code& err, tcp::resolver::iterator endpoint_iterator)
@@ -252,8 +260,8 @@ public:
 
 			state_ = httpx::STATE::READ_BODY;
 			//	std::cerr << message_body_.str();
-			[this, self]() {callback_(*this); }();
-			//	callback_(*this);
+			[this, self]() {complete_handler_(*this); }();
+			//	complete_handler_(*this);
 
 		}
 		else if (!err)
@@ -267,7 +275,7 @@ public:
 			auto timer = std::make_shared<asioUtil::deadlineOperation3>(io_service_, 1000,
 				[this,self](const boost::system::error_code &ec) {
 					std::cerr << "timeout" << std::endl;
-					[this, self]() { callback_(*this); }();
+					[this, self]() { complete_handler_(*this); }();
 					shutdown_socket_();
 				}
 			);
@@ -284,7 +292,7 @@ public:
 
 	httpx::STATE get_status() { return(state_); };
 
-	void set_request(std::string header) {
+	void set_request(std::string& header) {
 		request_.consume(request_.size());
 		std::ostream request_stream(&request_);
 		request_stream << header;
