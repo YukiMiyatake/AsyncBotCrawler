@@ -70,13 +70,13 @@ public:
 public:
 	// TODO: RAII
 	// HTTP constructor
-	template<typename Str>
+	template<typename Str1, typename Str2, typename Str3 >
 	httpx_client(boost::asio::io_service& io_service,
-		Str&& server,  Str&& uri,  Str&& port)
+		Str1&& server,  Str2&& uri,  Str3&& port="http")
 		: io_service_((io_service))
 		, resolver_(io_service), socket_(io_service)
-		, server_(std::forward<Str>(server))/*, uri_((uri))*/
-		, port_(std::forward<Str>(port)), deadline_timer_(io_service)
+		, server_(std::forward<Str1>(server)) , uri_(std::forward<Str2>(uri))
+		, port_(std::forward<Str3>(port)), deadline_timer_(io_service)
 		//, shutdown_socket_( [this]() { socket_.shutdown(boost::asio::socket_base::shutdown_type::shutdown_send); })
 
 	{
