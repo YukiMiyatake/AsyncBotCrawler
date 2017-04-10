@@ -50,7 +50,8 @@ void httpx_client<http_socket>::handle_connect(const boost::system::error_code& 
 			[this, self](const boost::system::error_code& ec, std::size_t bytes_transferred) {
 			deadline_timer_.cancel();
 			handle_write_request(ec);
-		});
+			}
+		);
 	}
 	else
 	{
