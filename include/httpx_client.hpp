@@ -83,7 +83,7 @@ public:
 
 		shutdown_socket_ = [this]() { socket_.shutdown(boost::asio::socket_base::shutdown_type::shutdown_send); };
 	}
-	/*
+	
 	// HTTPX constructor
 	httpx_client(boost::asio::io_service& io_service, boost::asio::ssl::context& context,
 		const std::string& server, const std::string& uri, const std::string& port)
@@ -91,7 +91,7 @@ public:
 
 		shutdown_socket_ = [this]() { socket_.shutdown(); };
 	}
-	*/
+	
 
 	void request(HTTPX_CALLBACK callback) {
 
