@@ -165,6 +165,7 @@
   <ItemGroup>
     <ClInclude Include="..\include\asioUtil.hpp" />
     <ClInclude Include="..\include\httpx_client.hpp" />
+    <ClInclude Include="..\include\socket.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

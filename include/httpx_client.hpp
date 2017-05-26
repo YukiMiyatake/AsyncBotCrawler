@@ -39,6 +39,11 @@ public:
 
 
 private:
+	boost::asio::io_service &io_service_;
+	boost::asio::deadline_timer deadline_timer_;
+	SOC socket_;
+
+
 	std::string server_;
 	std::string uri_;
 	std::string port_;
@@ -47,12 +52,10 @@ private:
 	HTTPX_CALLBACK complete_handler_;
 
 
-	boost::asio::deadline_timer deadline_timer_;
 
 	boost::asio::streambuf request_;
 	boost::asio::streambuf response_;
 	boost::asio::ip::tcp::resolver resolver_;
-	SOC socket_;
 
 	httpx::STATE state_ = httpx::STATE::INIT;
 
@@ -63,7 +66,6 @@ private:
 	// shutdown function is different in HTTP and HTTPX
 	std::function<void(void)>  shutdown_socket_;
 
-	boost::asio::io_service &io_service_;
 public:
 	unsigned int timeout_ms = 1000;
 
@@ -72,16 +74,16 @@ public:
 	// HTTP constructor
 	template<typename Str1, typename Str2, typename Str3 >
 	httpx_client(boost::asio::io_service& io_service,
-		Str1&& server,  Str2&& uri,  Str3&& port="http")
+		Str1&& server, Str2&& uri,  Str3&& port="http")
 		: io_service_((io_service))
-		, resolver_(io_service), socket_(io_service)
+		, resolver_(io_service), socket_(io_service_)
 		, server_(std::forward<Str1>(server)) , uri_(std::forward<Str2>(uri))
 		, port_(std::forward<Str3>(port)), deadline_timer_(io_service)
-		//, shutdown_socket_( [this]() { socket_.shutdown(boost::asio::socket_base::shutdown_type::shutdown_send); })
+		, shutdown_socket_( [this]() { socket_.shutdown(boost::asio::socket_base::shutdown_type::shutdown_send); })
 
 	{
 
-		shutdown_socket_ = [this]() { socket_.shutdown(boost::asio::socket_base::shutdown_type::shutdown_send); };
+		//shutdown_socket_ = [this]() { socket_.shutdown(boost::asio::socket_base::shutdown_type::shutdown_send); };
 	}
 	
 	// HTTPX constructor
