@@ -97,12 +97,12 @@ public:
 
 	void request(HTTPX_CALLBACK callback) {
 
-		auto  self(shared_from_this());
+		auto  self(this->shared_from_this());
 
 		complete_handler_ = callback;
 		state_ = httpx::STATE::INIT;
 
-		tcp::resolver::query query(server_, port_);
+		boost::asio::ip::tcp::resolver::query query(server_, port_);
 
 		asioUtil::deadlineOperation2(deadline_timer_, timeout_ms
 		, [this, self](const boost::system::error_code &ec) {
@@ -111,7 +111,7 @@ public:
 		} );
 
 		resolver_.async_resolve(query
-			, [this, self](const boost::system::error_code& err, tcp::resolver::iterator endpoint_iterator)
+			, [this, self](const boost::system::error_code& err, boost::asio::ip::tcp::resolver::iterator endpoint_iterator)
 		{
 			deadline_timer_.cancel();
 			handle_resolve(err, endpoint_iterator);
@@ -131,7 +131,7 @@ public:
 
 	void handle_write_request(const boost::system::error_code& err)
 	{
-		auto  self(shared_from_this());
+		auto  self(this->shared_from_this());
 
 		std::cout << "handle_write_request "  "\n";
 		if (!err)
@@ -158,7 +158,7 @@ public:
 
 	void handle_read_status_line(const boost::system::error_code& err)
 	{
-		auto  self(shared_from_this());
+		auto  self(this->shared_from_this());
 
 		std::cerr << "handle_read_status_line "  "\n";
 		if (!err)
@@ -204,7 +204,7 @@ public:
 
 	void handle_read_headers(const boost::system::error_code& err)
 	{
-		auto  self(shared_from_this());
+		auto  self(this->shared_from_this());
 
 		std::cerr << "handle_read_headers "  "\n";
 		if (!err)
@@ -250,7 +250,7 @@ public:
 
 	void handle_read_content(const boost::system::error_code& err)
 	{
-		auto  self(shared_from_this());
+		auto  self(this->shared_from_this());
 		std::cerr << "handle_read_content "  "\n";
 		//		if (err == boost::asio::error::eof)
 		if (err)
