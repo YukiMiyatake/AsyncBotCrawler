@@ -3,37 +3,9 @@
 
 
 template <>
-void httpx_client<http_socket>::handle_resolve(const boost::system::error_code& err,
-	boost::asio::ip::tcp::resolver::iterator endpoint_iterator) {
-
-	auto  self(shared_from_this());
-	if (!err)
-	{
-		state_ = httpx::STATE::RESOLVED;
-
-		asioUtil::deadlineOperation2(deadline_timer_, timeout_ms
-			, [this, self](const boost::system::error_code &ec) {
-			std::cerr << "timeout" << std::endl;
-			shutdown_socket_();
-		});
-
-		boost::asio::async_connect(socket_.lowest_layer(), endpoint_iterator,
-			[this, self](const boost::system::error_code& ec, boost::asio::ip::tcp::resolver::iterator endpoint_iterator) {
-			deadline_timer_.cancel();
-			handle_connect(ec);
-		});
-	}
-	else
-	{
-		std::cerr << "Error: " << err.message() << "\n";
-	}
-}
-
-
-template <>
 void httpx_client<http_socket>::handle_connect(const boost::system::error_code& error)
 {
-	auto  self(shared_from_this());
+	auto  self(this->shared_from_this());
 
 	std::cerr << "handle_connect "  "\n";
 	if (!error)
@@ -58,3 +30,31 @@ void httpx_client<http_socket>::handle_connect(const boost::system::error_code& 
 		std::cerr << "Connect failed: " << error.message() << "\n";
 	}
 }
+
+template <>
+void httpx_client<http_socket>::handle_resolve(const boost::system::error_code& err,
+	boost::asio::ip::tcp::resolver::iterator endpoint_iterator) {
+
+	auto  self(this->shared_from_this());
+	if (!err)
+	{
+		state_ = httpx::STATE::RESOLVED;
+
+		asioUtil::deadlineOperation2(deadline_timer_, timeout_ms
+			, [this, self](const boost::system::error_code &ec) {
+			std::cerr << "timeout" << std::endl;
+			shutdown_socket_();
+		});
+
+		boost::asio::async_connect(socket_.lowest_layer(), endpoint_iterator,
+			[this, self](const boost::system::error_code& ec, boost::asio::ip::tcp::resolver::iterator endpoint_iterator) {
+			deadline_timer_.cancel();
+			handle_connect(ec);
+		});
+	}
+	else
+	{
+		std::cerr << "Error: " << err.message() << "\n";
+	}
+}
+

@@ -67,7 +67,7 @@ namespace abc {
 	public:
 		// TODO: RAII
 		// HTTP constructor
-		template<typename SOC>
+		//template<typename SOC>
 		crawler(SOC&& soc,
 			std::string server, std::string port = "http")
 			: io_service_((soc.get_io_service()))
@@ -82,12 +82,12 @@ namespace abc {
 
 		void request(HTTPX_CALLBACK callback) {
 
-			auto  self(shared_from_this());
+			auto  self(this->shared_from_this());
 
 			complete_handler_ = callback;
 			state_ = STATE::INIT;
 
-			tcp::resolver::query query(server_, port_);
+			boost::asio::ip::tcp::resolver::query query(server_, port_);
 
 			asioUtil::deadlineOperation2(deadline_timer_, timeout_ms
 				, [this, self](const boost::system::error_code &ec) {
@@ -96,7 +96,7 @@ namespace abc {
 			});
 
 			resolver_.async_resolve(query
-				, [this, self](const boost::system::error_code& err, tcp::resolver::iterator endpoint_iterator)
+				, [this, self](const boost::system::error_code& err, boost::asio::ip::tcp::resolver::iterator endpoint_iterator)
 			{
 				deadline_timer_.cancel();
 				handle_resolve(err, endpoint_iterator);
@@ -116,7 +116,7 @@ namespace abc {
 
 		void handle_write_request(const boost::system::error_code& err)
 		{
-			auto  self(shared_from_this());
+			auto  self(this->shared_from_this());
 
 			std::cout << "handle_write_request "  "\n";
 			if (!err)
@@ -143,7 +143,7 @@ namespace abc {
 
 		void handle_read_status_line(const boost::system::error_code& err)
 		{
-			auto  self(shared_from_this());
+			auto  self(this->shared_from_this());
 
 			std::cerr << "handle_read_status_line "  "\n";
 			if (!err)
@@ -189,7 +189,7 @@ namespace abc {
 
 		void handle_read_headers(const boost::system::error_code& err)
 		{
-			auto  self(shared_from_this());
+			auto  self(this->shared_from_this());
 
 			std::cerr << "handle_read_headers "  "\n";
 			if (!err)
@@ -235,7 +235,7 @@ namespace abc {
 
 		void handle_read_content(const boost::system::error_code& err)
 		{
-			auto  self(shared_from_this());
+			auto  self(this->shared_from_this());
 			std::cerr << "handle_read_content "  "\n";
 			//		if (err == boost::asio::error::eof)
 			if (err)
@@ -300,33 +300,6 @@ namespace abc {
 
 	using namespace std;
 
-	template <>
-	void crawler<boost::asio::ip::tcp::socket>::handle_resolve(const boost::system::error_code& err,
-		boost::asio::ip::tcp::resolver::iterator endpoint_iterator) {
-
-		auto  self(shared_from_this());
-		if (!err)
-		{
-			state_ = STATE::RESOLVED;
-
-			asioUtil::deadlineOperation2(deadline_timer_, timeout_ms
-				, [this, self](const boost::system::error_code &ec) {
-				std::cerr << "timeout" << std::endl;
-				shutdown_socket_();
-			});
-
-			boost::asio::async_connect(socket_.lowest_layer(), endpoint_iterator,
-				[this, self](const boost::system::error_code& ec, boost::asio::ip::tcp::resolver::iterator endpoint_iterator) {
-				deadline_timer_.cancel();
-				handle_connect(ec);
-			});
-		}
-		else
-		{
-			std::cerr << "Error: " << err.message() << "\n";
-		}
-	}
-
 
 	template <>
 	void crawler<boost::asio::ip::tcp::socket>::handle_connect(const boost::system::error_code& error)
@@ -356,6 +329,34 @@ namespace abc {
 			std::cerr << "Connect failed: " << error.message() << "\n";
 		}
 	}
+
+	template <>
+	void crawler<boost::asio::ip::tcp::socket>::handle_resolve(const boost::system::error_code& err,
+		boost::asio::ip::tcp::resolver::iterator endpoint_iterator) {
+
+		auto  self(shared_from_this());
+		if (!err)
+		{
+			state_ = STATE::RESOLVED;
+
+			asioUtil::deadlineOperation2(deadline_timer_, timeout_ms
+				, [this, self](const boost::system::error_code &ec) {
+				std::cerr << "timeout" << std::endl;
+				shutdown_socket_();
+			});
+
+			boost::asio::async_connect(socket_.lowest_layer(), endpoint_iterator,
+				[this, self](const boost::system::error_code& ec, boost::asio::ip::tcp::resolver::iterator endpoint_iterator) {
+				deadline_timer_.cancel();
+				handle_connect(ec);
+			});
+		}
+		else
+		{
+			std::cerr << "Error: " << err.message() << "\n";
+		}
+	}
+
 
 
 

@@ -38,13 +38,13 @@ file(GLOB_RECURSE SOURCE_FILES   "src/*.cpp" "src/*.c" )
 #file(GLOB_RECURSE SOURCE_FILES_CLI    )
 
 
+add_executable(ABC ${SOURCE_FILES})
 
 #find_package(Boost 1.57.0 REQUIRED COMPONENTS thread signals filesystem system coroutine context chrono container)
 find_package(Boost 1.57.0 REQUIRED COMPONENTS thread signals filesystem system coroutine context )
 if(Boost_FOUND)
     include_directories(${Boost_INCLUDE_DIRS} ${PROJECT_SOURCE_DIR})
-    add_executable(ABC ${SOURCE_FILES})
-    target_link_libraries(ABC boost_coroutine ${Boost_LIBRARIES} pthread Yamasa Common game_mode)
+    target_link_libraries(ABC boost_coroutine ${Boost_LIBRARIES} pthread )
 else()
     message(FATAL_ERROR "boost not found")
 endif()
@@ -53,10 +53,12 @@ find_package(OpenSSL REQUIRED)
 if(NOT OPENSSL_FOUND)
     message(FATAL_ERROR "Fail to find OpenSSL")
 endif()
-target_link_libraries(ABC OpenSSL::SSL)
-target_link_libraries(ABC OpenSSL::Crypto)
+#target_link_libraries(ABC OpenSSL::SSL OpenSSL::Crypto )
+target_link_libraries(ABC ${OPENSSL_LIBRARIES} )
 message(STATUS "OPENSSL_INCLUDE_DIR: ${OPENSSL_INCLUDE_DIR}")
 include_directories(${OPENSSL_INCLUDE_DIR})
+
+
 
 #find_package(Boost 1.57.0 COMPONENTS thread signals filesystem system context chrono container)
 #if(Boost_FOUND)
