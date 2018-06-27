@@ -80,9 +80,13 @@ namespace abc {
 		{
 		}
 
+		std::shared_ptr<crawler> getSelf(){
+			return this->shared_from_this();
+		}
+
 		void request(HTTPX_CALLBACK callback) {
 
-			auto  self(this->shared_from_this());
+			auto self(getSelf());
 
 			complete_handler_ = callback;
 			state_ = STATE::INIT;
@@ -116,7 +120,7 @@ namespace abc {
 
 		void handle_write_request(const boost::system::error_code& err)
 		{
-			auto  self(this->shared_from_this());
+			auto self(getSelf());
 
 			std::cout << "handle_write_request "  "\n";
 			if (!err)
@@ -143,7 +147,8 @@ namespace abc {
 
 		void handle_read_status_line(const boost::system::error_code& err)
 		{
-			auto  self(this->shared_from_this());
+			auto self(getSelf());
+
 
 			std::cerr << "handle_read_status_line "  "\n";
 			if (!err)
@@ -189,7 +194,7 @@ namespace abc {
 
 		void handle_read_headers(const boost::system::error_code& err)
 		{
-			auto  self(this->shared_from_this());
+			auto self(getSelf());
 
 			std::cerr << "handle_read_headers "  "\n";
 			if (!err)
@@ -235,7 +240,7 @@ namespace abc {
 
 		void handle_read_content(const boost::system::error_code& err)
 		{
-			auto  self(this->shared_from_this());
+			auto self(getSelf());
 			std::cerr << "handle_read_content "  "\n";
 			//		if (err == boost::asio::error::eof)
 			if (err)
