@@ -36,8 +36,6 @@ class httpx_client : public std::enable_shared_from_this<httpx_client<SOC>>
 public:
 	using HTTPX_CALLBACK = std::function< void(httpx_client<SOC>&)>;
 
-
-
 private:
 	boost::asio::io_service &io_service_;
 	boost::asio::deadline_timer deadline_timer_;
@@ -50,8 +48,6 @@ private:
 
 	// complete callback
 	HTTPX_CALLBACK complete_handler_;
-
-
 
 	boost::asio::streambuf request_;
 	boost::asio::streambuf response_;
@@ -94,10 +90,13 @@ public:
 		shutdown_socket_ = [this]() { socket_.shutdown(); };
 	}
 	
+	std::shared_ptr<httpx_client> getSelf(){
+		return this->shared_from_this();
+	}
+
 
 	void request(HTTPX_CALLBACK callback) {
-
-		auto  self(this->shared_from_this());
+		auto  self(getSelf());
 
 		complete_handler_ = callback;
 		state_ = httpx::STATE::INIT;
@@ -131,7 +130,7 @@ public:
 
 	void handle_write_request(const boost::system::error_code& err)
 	{
-		auto  self(this->shared_from_this());
+		auto  self(getSelf());
 
 		std::cout << "handle_write_request "  "\n";
 		if (!err)
@@ -158,7 +157,7 @@ public:
 
 	void handle_read_status_line(const boost::system::error_code& err)
 	{
-		auto  self(this->shared_from_this());
+		auto  self(getSelf());
 
 		std::cerr << "handle_read_status_line "  "\n";
 		if (!err)
@@ -204,7 +203,7 @@ public:
 
 	void handle_read_headers(const boost::system::error_code& err)
 	{
-		auto  self(this->shared_from_this());
+		auto  self(getSelf());
 
 		std::cerr << "handle_read_headers "  "\n";
 		if (!err)
@@ -250,7 +249,7 @@ public:
 
 	void handle_read_content(const boost::system::error_code& err)
 	{
-		auto  self(this->shared_from_this());
+		auto  self(getSelf());
 		std::cerr << "handle_read_content "  "\n";
 		//		if (err == boost::asio::error::eof)
 		if (err)

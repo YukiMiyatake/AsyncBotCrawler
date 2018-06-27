@@ -18,7 +18,7 @@ bool verify_certificate(bool preverified, boost::asio::ssl::verify_context& ctx)
 template <>
 void httpx_client<https_socket>::handle_connect(const boost::system::error_code& error)
 {
-	auto  self(shared_from_this());
+	auto  self(getSelf());
 
 	std::cerr << "handle_connect "  "\n";
 	if (!error)
@@ -76,7 +76,7 @@ template <>
 void httpx_client<https_socket>::handle_resolve(const boost::system::error_code& err,
 	boost::asio::ip::tcp::resolver::iterator endpoint_iterator) {
 
-	auto  self(shared_from_this());
+	auto  self(getSelf());
 	if (!err)
 	{
 		state_ = httpx::STATE::RESOLVED;

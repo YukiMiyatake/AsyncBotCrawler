@@ -5,7 +5,7 @@
 template <>
 void httpx_client<http_socket>::handle_connect(const boost::system::error_code& error)
 {
-	auto  self(this->shared_from_this());
+	auto  self(getSelf());
 
 	std::cerr << "handle_connect "  "\n";
 	if (!error)
@@ -35,7 +35,7 @@ template <>
 void httpx_client<http_socket>::handle_resolve(const boost::system::error_code& err,
 	boost::asio::ip::tcp::resolver::iterator endpoint_iterator) {
 
-	auto  self(this->shared_from_this());
+	auto  self(getSelf());
 	if (!err)
 	{
 		state_ = httpx::STATE::RESOLVED;
