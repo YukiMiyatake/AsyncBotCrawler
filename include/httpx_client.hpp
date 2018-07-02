@@ -86,7 +86,7 @@ public:
 		//shutdown_socket_ = [this]() { socket_.shutdown(boost::asio::socket_base::shutdown_type::shutdown_send); };
 	}
 	
-	// HTTPX constructor
+	// HTTPS constructor
 	httpx_client(boost::asio::io_service& io_service, boost::asio::ssl::context& context,
 		const std::string& server, const std::string& uri, const std::string& port)
 		: io_service_(io_service), resolver_(io_service), socket_(io_service, context), server_(server), uri_(uri), port_(port), deadline_timer_(io_service) {
