@@ -9,6 +9,9 @@
 
 namespace abc {
 
+using http_socket = boost::asio::ip::tcp::socket;
+using https_socket = boost::asio::ssl::stream<boost::asio::ip::tcp::socket>;
+
 	enum class STATE {
 		INIT,
 		RESOLVED,
@@ -50,7 +53,7 @@ namespace abc {
 		boost::asio::streambuf request_;
 		boost::asio::streambuf response_;
 		boost::asio::ip::tcp::resolver resolver_;
-		Socket &&socket_;
+		Socket socket_;
 
 		STATE state_ = STATE::INIT;
 
@@ -65,9 +68,27 @@ namespace abc {
 		unsigned int timeout_ms = 1000;
 
 	public:
-		// TODO: RAII
 		// HTTP constructor
 		//template<typename SOC>
+//		crawler(SOC soc, std::string server, std::string port/* = "http"*/);
+
+	crawler(boost::asio::io_service& io_service, 
+		const std::string& server, const std::string& uri, const std::string& port)
+		: io_service_(io_service), resolver_(io_service), socket_(io_service), server_(server), uri_(uri), port_(port), deadline_timer_(io_service) {
+
+		shutdown_socket_ = [this]() { socket_.shutdown(boost::asio::socket_base::shutdown_type::shutdown_send); };
+	}
+
+	crawler(boost::asio::io_service& io_service, boost::asio::ssl::context& context,
+		const std::string& server, const std::string& uri, const std::string& port)
+		: io_service_(io_service), resolver_(io_service), socket_(io_service, context), server_(server), uri_(uri), port_(port), deadline_timer_(io_service) {
+
+		shutdown_socket_ = [this]() { socket_.shutdown(); };
+	}
+
+
+
+/*		
 		crawler(SOC&& soc,
 			std::string server, std::string port = "http")
 			: io_service_((soc.get_io_service()))
@@ -79,6 +100,7 @@ namespace abc {
 
 		{
 		}
+*/
 
 		std::shared_ptr<crawler> getSelf(){
 			return this->shared_from_this();
@@ -302,14 +324,27 @@ namespace abc {
 
 
 
+/*
+//	using namespace std;
+	template <>
+	crawler<http_socket>::crawler(http_socket soc,
+		std::string server, std::string port )
+		: io_service_((soc.get_io_service()))
+		, resolver_(io_service_)
+//		, socket_(std::forward<http_socket>(soc))
+		, socket_(soc)
+		, server_((server))
+		, port_((port)), deadline_timer_(io_service_)
+		, shutdown_socket_([this]() { socket_.shutdown(boost::asio::socket_base::shutdown_type::shutdown_send); })
 
-	using namespace std;
-
+	{
+	}
+*/
 
 	template <>
-	void crawler<boost::asio::ip::tcp::socket>::handle_connect(const boost::system::error_code& error)
+	void crawler<http_socket>::handle_connect(const boost::system::error_code& error)
 	{
-		auto  self(shared_from_this());
+		auto  self(getSelf());
 
 		std::cerr << "handle_connect "  "\n";
 		if (!error)
@@ -336,10 +371,10 @@ namespace abc {
 	}
 
 	template <>
-	void crawler<boost::asio::ip::tcp::socket>::handle_resolve(const boost::system::error_code& err,
+	void crawler<http_socket>::handle_resolve(const boost::system::error_code& err,
 		boost::asio::ip::tcp::resolver::iterator endpoint_iterator) {
 
-		auto  self(shared_from_this());
+		auto  self(getSelf());
 		if (!err)
 		{
 			state_ = STATE::RESOLVED;
@@ -362,6 +397,147 @@ namespace abc {
 		}
 	}
 
+
+
+
+
+/*
+	template <>
+	crawler<https_socket>::crawler(https_socket soc,
+		std::string server, std::string port )
+		: io_service_((soc.get_io_service()))
+		, resolver_(io_service_)
+//		, socket_(std::forward<https_socket>(soc))
+		, socket_(soc)
+		, server_((server))
+		, port_((port)), deadline_timer_(io_service_)
+		, shutdown_socket_([this]() { socket_.shutdown(); })
+
+	{
+		std::cerr << "crawler https"  "\n";
+	}
+
+*/
+
+bool verify_certificate(bool preverified, boost::asio::ssl::verify_context& ctx)
+{
+	std::cerr << "verify_certificate "  "\n";
+
+	char subject_name[256];
+	X509* cert = X509_STORE_CTX_get_current_cert(ctx.native_handle());
+	X509_NAME_oneline(X509_get_subject_name(cert), subject_name, 256);
+	std::cerr << "Verifying " << subject_name << "  " << preverified << "\n";
+
+	return preverified;
+}
+
+
+
+
+template <>
+void crawler<https_socket>::handle_connect(const boost::system::error_code& error)
+{
+	auto  self(getSelf());
+
+	std::cerr << "handle_connect https"  "\n";
+	if (!error)
+	{
+		state_ = STATE::CONNECTED;
+
+		asioUtil::deadlineOperation2(deadline_timer_, timeout_ms
+			, [this, self](const boost::system::error_code &ec) {
+			std::cerr << "timeout" << std::endl;
+			shutdown_socket_();
+		});
+
+		std::cerr << "ahs https"  "\n";
+
+		socket_.async_handshake(boost::asio::ssl::stream_base::client,
+			[this, self](const boost::system::error_code& ec) {
+				std::cerr << "handle_handshake 0 https"  "\n";
+				deadline_timer_.cancel();
+
+				// handle_handshake
+				std::cerr << "handle_handshake https"  "\n";
+				state_ = STATE::HANDSHAKED;
+				if (!ec)
+				{
+
+					asioUtil::deadlineOperation2(deadline_timer_, timeout_ms
+						, [this, self](const boost::system::error_code &ec) {
+						//			cerr << "timeout" << endl;
+						shutdown_socket_();
+					});
+
+					boost::asio::async_write(socket_, request_,
+						[this, self](const boost::system::error_code& ec, std::size_t bytes_transferred) {
+						deadline_timer_.cancel();
+						handle_write_request(ec);
+					});
+				}
+				else
+				{
+					std::cerr << "Handshake failed: " << ec.message() << "\n";
+				}
+
+//			handle_handshake(this,ec);
+		});
+		/*
+		socket_.async_handshake(boost::asio::ssl::stream_base::client,
+		boost::bind(&httpx_client::handle_handshake, shared_from_this(),
+		boost::asio::placeholders::error));
+		*/
+		std::cerr << "handle_connect FIN https"  "\n";
+
+	}
+	else
+	{
+		std::cerr << "Connect failed: " << error.message() << "\n";
+	}
+}
+
+template <>
+void crawler<https_socket>::handle_resolve(const boost::system::error_code& err,
+	boost::asio::ip::tcp::resolver::iterator endpoint_iterator) {
+
+	std::cerr << "handle_resolve https"  "\n";
+	auto  self(getSelf());
+	if (!err)
+	{
+		state_ = STATE::RESOLVED;
+
+		// no Verify
+		socket_.set_verify_mode(boost::asio::ssl::verify_none);
+
+		socket_.set_verify_callback(verify_certificate);
+			//boost::bind(&httpx_client::verify_certificate, this, _1, _2));
+
+
+		asioUtil::deadlineOperation2(deadline_timer_, timeout_ms
+			, [this, self](const boost::system::error_code &ec) {
+			std::cerr << "timeout" << std::endl;
+			shutdown_socket_();
+		});
+
+	std::cerr << "asc"  "\n";
+		boost::asio::async_connect(socket_.lowest_layer(), endpoint_iterator,
+			[this, self](const boost::system::error_code& ec, boost::asio::ip::tcp::resolver::iterator endpoint_iterator) {
+			deadline_timer_.cancel();
+			handle_connect(ec);
+		});
+	std::cerr << "asc fin"  "\n";
+
+		/*
+		boost::asio::async_connect(socket_.lowest_layer(), endpoint_iterator,
+		boost::bind(&httpx_client::handle_connect, shared_from_this(),
+		boost::asio::placeholders::error));
+		*/
+	}
+	else
+	{
+		std::cerr << "Error: " << err.message() << "\n";
+	}
+}
 
 
 

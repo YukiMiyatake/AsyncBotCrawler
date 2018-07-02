@@ -36,6 +36,8 @@ class httpx_client : public std::enable_shared_from_this<httpx_client<SOC>>
 public:
 	using HTTPX_CALLBACK = std::function< void(httpx_client<SOC>&)>;
 
+
+
 private:
 	boost::asio::io_service &io_service_;
 	boost::asio::deadline_timer deadline_timer_;
@@ -48,6 +50,8 @@ private:
 
 	// complete callback
 	HTTPX_CALLBACK complete_handler_;
+
+
 
 	boost::asio::streambuf request_;
 	boost::asio::streambuf response_;
