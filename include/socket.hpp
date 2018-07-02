@@ -72,16 +72,26 @@ using https_socket = boost::asio::ssl::stream<boost::asio::ip::tcp::socket>;
 		//template<typename SOC>
 //		crawler(SOC soc, std::string server, std::string port/* = "http"*/);
 
+	template< class S>
 	crawler(boost::asio::io_service& io_service, 
-		const std::string& server, const std::string& uri, const std::string& port)
-		: io_service_(io_service), resolver_(io_service), socket_(io_service), server_(server), uri_(uri), port_(port), deadline_timer_(io_service) {
+		S&& server, S&& uri, S&& port)
+		: io_service_(io_service), resolver_(io_service), socket_(io_service), 
+		server_(std::forward<S>(server)), 
+		uri_(std::forward<S>(uri)), 
+		port_(std::forward<S>(port)), 
+		deadline_timer_(io_service) {
 
 		shutdown_socket_ = [this]() { socket_.shutdown(boost::asio::socket_base::shutdown_type::shutdown_send); };
 	}
 
-	crawler(boost::asio::io_service& io_service, boost::asio::ssl::context& context,
-		const std::string& server, const std::string& uri, const std::string& port)
-		: io_service_(io_service), resolver_(io_service), socket_(io_service, context), server_(server), uri_(uri), port_(port), deadline_timer_(io_service) {
+	template< class S, class T>
+	crawler(boost::asio::io_service& io_service, T&& context,
+		 S&& server, S&& uri, S&& port)
+		: io_service_(io_service), resolver_(io_service), 
+		socket_(io_service, std::forward<T>(context)), 
+		server_(std::forward<S>(server)), 
+		uri_(std::forward<S>(uri)), port_(std::forward<S>(port)), 
+		deadline_timer_(io_service) {
 
 		shutdown_socket_ = [this]() { socket_.shutdown(); };
 	}
