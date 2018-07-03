@@ -26,20 +26,22 @@ using https_socket = boost::asio::ssl::stream<boost::asio::ip::tcp::socket>;
 
 
 
-	template<typename SOC>
-	class crawler : public std::enable_shared_from_this<crawler<SOC>>
+	template<typename Socket>
+	class crawler : public std::enable_shared_from_this<crawler<Socket>>
 	{
 	public:
-		using Socket = SOC;
+//		using Socket = SOC;
 
 	public:
-		using HTTPX_CALLBACK = std::function< void(crawler<SOC>&)>;
+		using HTTPX_CALLBACK = std::function< void(crawler<Socket>&)>;
 
 
 
 	private:
 		boost::asio::io_service &io_service_;
 
+		Socket socket_;
+//		std::shared_ptr<Socket> socket_;
 		std::string server_;
 		std::string uri_;
 		std::string port_;
@@ -53,7 +55,6 @@ using https_socket = boost::asio::ssl::stream<boost::asio::ip::tcp::socket>;
 		boost::asio::streambuf request_;
 		boost::asio::streambuf response_;
 		boost::asio::ip::tcp::resolver resolver_;
-		Socket socket_;
 
 		STATE state_ = STATE::INIT;
 
@@ -70,7 +71,8 @@ using https_socket = boost::asio::ssl::stream<boost::asio::ip::tcp::socket>;
 	public:
 		// HTTP constructor
 		//template<typename SOC>
-//		crawler(SOC soc, std::string server, std::string port/* = "http"*/);
+		template< class S, class T>
+		crawler(T&& soc, S&& server, S&& uri, S&& port/* = "http"*/);
 
 	template< class S>
 	crawler(boost::asio::io_service& io_service, 
@@ -334,22 +336,24 @@ using https_socket = boost::asio::ssl::stream<boost::asio::ip::tcp::socket>;
 
 
 
-/*
-//	using namespace std;
+
 	template <>
-	crawler<http_socket>::crawler(http_socket soc,
-		std::string server, std::string port )
+	template< class S, class T>
+	crawler<http_socket>::crawler(
+		T&& soc,
+		S&& server, S&& uri, S&& port )
 		: io_service_((soc.get_io_service()))
 		, resolver_(io_service_)
-//		, socket_(std::forward<http_socket>(soc))
-		, socket_(soc)
-		, server_((server))
-		, port_((port)), deadline_timer_(io_service_)
+		, socket_(std::forward<T>(soc))
+		, server_(std::forward<S>(server))
+		, uri_(std::forward<S>(uri))
+		, port_(std::forward<S>(port))
+		, deadline_timer_(io_service_)
 		, shutdown_socket_([this]() { socket_.shutdown(boost::asio::socket_base::shutdown_type::shutdown_send); })
 
 	{
 	}
-*/
+
 
 	template <>
 	void crawler<http_socket>::handle_connect(const boost::system::error_code& error)
@@ -411,23 +415,27 @@ using https_socket = boost::asio::ssl::stream<boost::asio::ip::tcp::socket>;
 
 
 
-/*
 	template <>
-	crawler<https_socket>::crawler(https_socket soc,
-		std::string server, std::string port )
+	template< class S, class T>
+	crawler<https_socket>::crawler(
+		T&& soc,
+		S&& server, S&& uri, S&& port )
 		: io_service_((soc.get_io_service()))
 		, resolver_(io_service_)
 //		, socket_(std::forward<https_socket>(soc))
-		, socket_(soc)
-		, server_((server))
-		, port_((port)), deadline_timer_(io_service_)
+		, socket_(std::forward<T>(soc))
+		, server_(std::forward<S>(server))
+		, uri_(std::forward<S>(uri))
+		, port_(std::forward<S>(port))
+		, deadline_timer_(io_service_)
 		, shutdown_socket_([this]() { socket_.shutdown(); })
 
 	{
 		std::cerr << "crawler https"  "\n";
 	}
 
-*/
+
+
 
 bool verify_certificate(bool preverified, boost::asio::ssl::verify_context& ctx)
 {
